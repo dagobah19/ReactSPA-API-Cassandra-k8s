@@ -1,0 +1,32 @@
+# Here we define the services that will handle the routing from external systems
+apiVersion: v1
+kind: Service
+# name the service
+metadata:
+  name: react-service
+  labels: 
+    app: reactspa
+spec:
+  # define the load balancer as the type for the services
+  type: LoadBalancer
+  # we define a valid IP for our cluster in the allowed range so we can tell the LB where to push traffic to
+  # if we comment this out, the cluster IP will be regenerated each time the cluster is rebuilt 
+  clusterIP: 10.96.47.163
+  # if the load balancer has a set IP, set it here
+  #loadBalancerIP: XXXXX
+  # target the "reactspa" application, or whatever is set in deployment
+  selector:
+    app: reactspa
+  # uncommenting the below will enable routing all traffic from clientip to the same pod after it reaches the Kubernetes cluster, commenting will leave the round robin routing active
+  #sessionAffinity: ClientIP
+  # define each container with a service route, which will allow communication from the Load Balancer to a container in a load balanced pod
+  # the name must be unique!
+  ports:
+    - name: ui-service
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: api-service
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

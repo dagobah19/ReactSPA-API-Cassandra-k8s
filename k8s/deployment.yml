@@ -1,0 +1,45 @@
+# This script will build a kubernetes cluster with 3 pods of 2 containers each, using an external load balancer
+# This results in self contained pods, where the containers in the pod can communicate with each other using localhost:port
+# The containers are exposed through services (routes) that map ports
+# The built in replication controller is responsible for making sure the number of replicas specified either in thie file or in the kubectl setreplicas command is met
+# run this by using the command: kubectl (create|apply) -f <*.yml>
+# check the status using:
+# kubectl describe services mte-service,  kubectl get services, kubectl get deployments, kubectl get pods
+
+# create the pods as a deployment
+apiVersion: apps/v1
+# setup as a deployment so we can scale
+kind: Deployment
+metadata:
+  # this is the name of the pod
+  name: reactapp-deployment
+  labels:
+    # label the app so the load balancer can see it
+    app: reactspa
+spec:
+  # this is the number of identical pods we want to create
+  replicas: 3
+  # the selector.matchLabels.app should match the app name
+  selector:
+    matchLabels:
+      app: reactspa
+  template:
+    metadata:
+      labels:
+        app: reactspa
+    spec:
+      # here we define the containers themselves
+      containers:
+      - name: ui
+        # this is the image we want to build from, can be <imagename> or to target a specific tag, <imagename>:<tag>
+        image: reactapp:v1
+        # we specify Never, so it will not go to the docker.io registry to pull and build a container
+        imagePullPolicy: Never
+        # container port to expose
+        ports:
+        - containerPort: 80  
+      - name: api
+        image: nodeapi:v1
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
